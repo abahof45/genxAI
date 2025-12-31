@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple AI Chatbot</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .chat-container {
+            width: 100%;
+            max-width: 800px;
+            height: 80vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .chat-header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+        
+        .chat-header p {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f5f5f5;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .user-message {
+            justify-content: flex-end;
+        }
+        
+        .bot-message {
+            justify-content: flex-start;
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            position: relative;
+            word-wrap: break-word;
+        }
+        
+        .user-message .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .bot-message .message-content {
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            margin: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .user-avatar {
+            background: #764ba2;
+            color: white;
+        }
+        
+        .bot-avatar {
+            background: #667eea;
+            color: white;
+        }
+        
+        .chat-input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+        
+        #userInput {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        #userInput:focus {
+            border-color: #667eea;
+        }
+        
+        #sendBtn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        #sendBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        #sendBtn:active {
+            transform: translateY(0);
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: 10px;
+            margin-left: 45px;
+        }
+        
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            margin-right: 3px;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        
+        @media (max-width: 600px) {
+            .chat-container {
+                height: 90vh;
+            }
+            
+            .message-content {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🤖 AI Assistant</h1>
+            <p>Ask me anything! I can help with various questions.</p>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                <div class="avatar bot-avatar">AI</div>
+                <div class="message-content">
+                    Hello! I'm your AI assistant. How can I help you today? You can ask me about:
+                    <br><br>
+                    • General knowledge questions
+                    <br>
+                    • Math calculations
+                    <br>
+                    • Current date/time
+                    <br>
+                    • Weather information (simulated)
+                    <br>
+                    • Or just have a conversation!
+                </div>
+            </div>
+        </div>
+        
+        <div class="typing-indicator" id="typingIndicator">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        
+        <div class="chat-input-container">
+            <div class="input-group">
+                <input type="text" id="userInput" placeholder="Type your message here..." autocomplete="off">
+                <button id="sendBtn">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const userInput = document.getElementById('userInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const typingIndicator = document.getElementById('typingIndicator');
+
+        // Simple AI responses
+        const aiResponses = {
+            greetings: ["Hello! How can I assist you today?", "Hi there! What can I do for you?", "Greetings! I'm here to help."],
+            feelings: ["I'm doing great, thanks for asking! How about you?", "I'm functioning perfectly! Always ready to help.", "As an AI, I don't have feelings, but I'm here to assist you!"],
+            capabilities: [
+                "I can help with: answering questions, calculations, providing information, and more!",
+                "My capabilities include: answering queries, basic math, trivia, and simulated conversations.",
+                "I'm designed to assist with various tasks - just ask me anything!"
+            ],
+            goodbye: ["Goodbye! Feel free to return if you need more help.", "See you later! Have a great day.", "Farewell! It was nice chatting with you."]
+        };
+
+        // Knowledge base
+        const knowledgeBase = {
+            "what is ai": "Artificial Intelligence (AI) is the simulation of human intelligence in machines that are programmed to think and learn like humans.",
+            "how are you": aiResponses.feelings[0],
+            "what can you do": aiResponses.capabilities[0],
+            "hello": aiResponses.greetings[0],
+            "hi": aiResponses.greetings[1],
+            "bye": aiResponses.goodbye[0],
+            "goodbye": aiResponses.goodbye[1],
+            "who created you": "I was created by a developer to demonstrate a simple AI chatbot using HTML, CSS, and JavaScript!",
+            "what is your name": "I'm AI Assistant, your helpful chatbot companion!",
+            "what is html": "HTML stands for HyperText Markup Language. It's the standard markup language for creating web pages.",
+            "what is javascript": "JavaScript is a programming language that enables interactive web pages and is an essential part of web applications.",
+            "tell me a joke": "Why don't scientists trust atoms? Because they make up everything!",
+            "what is the weather": "I don't have real-time weather data, but I can tell you it's a beautiful day to learn something new!",
+            "what time is it": `The current time is ${new Date().toLocaleTimeString()}`,
+            "what date is it": `Today's date is ${new Date().toDateString()}`,
+            "thank you": "You're welcome! Happy to help. Is there anything else you'd like to know?",
+            "thanks": "You're very welcome! Let me know if you need anything else."
+        };
+
+        function addMessage(message, isUser = false) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = `avatar ${isUser ? 'user-avatar' : 'bot-avatar'}`;
+            avatarDiv.textContent = isUser ? 'You' : 'AI';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.textContent = message;
+            
+            if (isUser) {
+                messageDiv.appendChild(contentDiv);
+                messageDiv.appendChild(avatarDiv);
+            } else {
+                messageDiv.appendChild(avatarDiv);
+                messageDiv.appendChild(contentDiv);
+            }
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function getAIResponse(input) {
+            input = input.toLowerCase().trim();
+            
+            // Check for specific questions in knowledge base
+            for (const [question, answer] of Object.entries(knowledgeBase)) {
+                if (input.includes(question)) {
+                    return answer;
+                }
+            }
+            
+            // Check for math expressions
+            if (input.match(/\d+[\+\-\*\/]\d+/)) {
+                try {
+                    // Safety: Only allow basic math operations
+                    const safeExpression = input.match(/[\d\+\-\*\/\.\s]+/)[0];
+                    const result = eval(safeExpression);
+                    return `The result is: ${result}`;
+                } catch (e) {
+                    return "I couldn't calculate that. Please make sure it's a valid math expression.";
+                }
+            }
+            
+            // Check for greetings
+            if (input.match(/^(hello|hi|hey|greetings)/)) {
+                return aiResponses.greetings[Math.floor(Math.random() * aiResponses.greetings.length)];
+            }
+            
+            // Check for goodbye
+            if (input.match(/^(bye|goodbye|see you|farewell)/)) {
+                return aiResponses.goodbye[Math.floor(Math.random() * aiResponses.goodbye.length)];
+            }
+            
+            // Default responses
+            const defaultResponses = [
+                "That's interesting! Could you tell me more?",
+                "I'm not sure I understand. Could you rephrase that?",
+                "Thanks for sharing that with me!",
+                "I'm learning from every conversation! Could you elaborate?",
+                "That's a great question! Let me think about it...",
+                "I'm here to help! What else would you like to know?",
+                "Fascinating! Tell me more about that."
+            ];
+            
+            return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+        }
+
+        function handleUserInput() {
+            const input = userInput.value.trim();
+            if (!input) return;
+            
+            // Add user message
+            addMessage(input, true);
+            userInput.value = '';
+            
+            // Show typing indicator
+            typingIndicator.style.display = 'block';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Simulate AI thinking
+            setTimeout(() => {
+                typingIndicator.style.display = 'none';
+                const response = getAIResponse(input);
+                addMessage(response, false);
+            }, 1000 + Math.random() * 1000);
+        }
+
+        // Event listeners
+        sendBtn.addEventListener('click', handleUserInput);
+        
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleUserInput();
+            }
+        });
+
+        // Focus on input when page loads
+        userInput.focus();
+    </script>
+</body>
+</html>
