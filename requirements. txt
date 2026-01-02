@@ -1,0 +1,8 @@
+vosk
+requests
+flask
+sounddevice
+scikit-learn
+pandas
+numpy
+openai
